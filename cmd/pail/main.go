@@ -3,14 +3,20 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"os/signal"
 	"os/user"
+	"time"
 
 	"github.com/FryDay/pail"
 )
 
 var token = os.Getenv("PAIL_TOKEN")
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func main() {
 	user, _ := user.Current()

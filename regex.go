@@ -2,6 +2,7 @@ package pail
 
 import (
 	"fmt"
+	"math/rand"
 	"regexp"
 	"strings"
 
@@ -36,7 +37,10 @@ func (r *Regex) handle(s *discordgo.Session, channelID, msg, author string) {
 			s.ChannelMessageSend(channelID, fmt.Sprintf("Okay %s", author))
 		}
 	case "replace":
-		s.ChannelMessageSend(channelID, r.Compiled.ReplaceAllString(msg, r.Sub))
+		chance := rand.Intn(99) + 1
+		if chance <= 5 {
+			s.ChannelMessageSend(channelID, r.Compiled.ReplaceAllString(msg, r.Sub))
+		}
 	case "reply":
 		s.ChannelMessageSend(channelID, r.Sub)
 	}

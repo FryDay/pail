@@ -7,6 +7,7 @@ import (
 )
 
 var (
-	db       *sqlite.DB
-	varRegex = regexp.MustCompile(`\$(\w+)`)
+	db               *sqlite.DB
+	varRegex         = regexp.MustCompile(`\$(\w+)`)
+	punctuationRegex = regexp.MustCompile(`[^\w\s]`)
 )

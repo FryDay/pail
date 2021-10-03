@@ -20,6 +20,7 @@ func NewFact(fact, tidbit, verb string) *Fact {
 }
 
 func getFact(msg string) (*Fact, error) {
+	msg = punctuationRegex.ReplaceAllString(msg, "")
 	fact := &Fact{}
 	if err := db.Get(`select id, fact, tidbit, verb from fact where fact=:fact order by random() limit 1`, map[string]interface{}{"fact": msg}, fact); err != nil {
 		if err == sqlite.ErrNoRows {

@@ -22,18 +22,11 @@ func NewClient(token, dbPath string) (*Client, error) {
 	session.Identify.Intents = discordgo.IntentsGuildMessages
 	session.AddHandler(messageHandler)
 
-	client := &Client{session: session}
-
-	return client, nil
+	return &Client{session: session}, nil
 }
 
 func (c *Client) Open() error {
-	err := c.session.Open()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return c.session.Open()
 }
 
 func (c *Client) Close() {

@@ -24,6 +24,15 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 
+	fact, err := getFact(msg)
+	if err != nil {
+		return
+	}
+	if fact != nil {
+		fact.handle(s, m.ChannelID)
+		return
+	}
+
 	if mentioned {
 		regex := loadRegex(true)
 		for _, rxp := range regex {
@@ -40,13 +49,5 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			rxp.handle(s, m.ChannelID, msg, m.Author.Mention())
 			return
 		}
-	}
-
-	fact, err := getFact(msg)
-	if err != nil {
-		return
-	}
-	if fact != nil {
-		fact.handle(s, m.ChannelID)
 	}
 }

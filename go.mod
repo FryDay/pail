@@ -3,6 +3,7 @@ module github.com/FryDay/pail
 go 1.17
 
 require (
+	github.com/BurntSushi/toml v0.4.1
 	github.com/bwmarrin/discordgo v0.23.2
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/jmoiron/sqlx v1.3.4

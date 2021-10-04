@@ -2,25 +2,40 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
 	"os/signal"
-	"os/user"
+	"path/filepath"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/FryDay/pail"
 )
-
-var token = os.Getenv("PAIL_TOKEN")
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
 func main() {
-	user, _ := user.Current()
-	bot, err := pail.NewClient(token, user.HomeDir+"/.config/pail/pail.db")
+	confDir := filepath.Join(os.Getenv("HOME"), ".config/pail")
+	if err := os.MkdirAll(confDir, os.ModePerm); err != nil {
+		log.Fatalln(err)
+	}
+
+	var conf pail.Config
+	confPath := filepath.Join(confDir, "pail.toml")
+	confFile, err := ioutil.ReadFile(confPath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if _, err := toml.Decode(string(confFile), &conf); err != nil {
+		log.Fatalln(err)
+	}
+	dbPath := filepath.Join(confDir, "pail.db")
+
+	bot, err := pail.NewClient(conf.Token, dbPath)
 	if err != nil {
 		log.Fatalln(err)
 	}

@@ -41,7 +41,7 @@ func getFact(db *sqlite.DB, msg string) (*Fact, error) {
 }
 
 func (f *Fact) insert(db *sqlite.DB) error {
-	return db.NamedExec(`insert into fact (fact, tidbit, verb) values (:fact, :tidbit, :verb)`, f)
+	return db.NamedExec(`insert into fact (fact, tidbit, verb) values (lower(:fact), :tidbit, :verb)`, f)
 }
 
 func (f *Fact) delete(db *sqlite.DB) error {

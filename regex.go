@@ -46,6 +46,7 @@ func (r *Regex) handle(p *Pail, s *discordgo.Session, channelID, msg, author str
 				return
 			}
 			s.ChannelMessageSend(channelID, fmt.Sprintf("Okay %s, I forgot \"%s _%s_ %s\"", author, p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit))
+			p.lastFact = nil
 			return
 		}
 		s.ChannelMessageSend(channelID, fmt.Sprintf("I'm sorry %s, I can't let you do that...", author))

@@ -44,6 +44,10 @@ func (f *Fact) insert(db *sqlite.DB) error {
 	return db.NamedExec(`insert into fact (fact, tidbit, verb) values (:fact, :tidbit, :verb)`, f)
 }
 
+func (f *Fact) delete(db *sqlite.DB) error {
+	return db.NamedExec(`delete from fact where id=:id`, f)
+}
+
 func (f *Fact) handle(s *discordgo.Session, channelID string) {
 	reply := f.Tidbit
 	if f.ReplacedTidbit != "" {

@@ -39,7 +39,16 @@ func (r *Regex) handle(p *Pail, s *discordgo.Session, channelID, msg, author str
 			s.ChannelMessageSend(channelID, fmt.Sprintf("Okay %s", author))
 		}
 	case "forget":
-		//
+		if p.lastFact != nil {
+			err := p.lastFact.delete(p.db)
+			if err != nil {
+				s.ChannelMessageSend(channelID, "BZZZZZZZZZT!")
+				return
+			}
+			s.ChannelMessageSend(channelID, fmt.Sprintf("Okay %s, I forgot \"%s _%s_ %s\"", author, p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit))
+			return
+		}
+		s.ChannelMessageSend(channelID, fmt.Sprintf("I'm sorry %s, I can't let you do that...", author))
 	case "inquiry":
 		if p.lastFact != nil {
 			s.ChannelMessageSend(channelID, fmt.Sprintf("That was \"%s _%s_ %s\"", p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit))

@@ -29,6 +29,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 		return
 	}
 	if fact != nil {
+		p.lastFact = fact
 		fact.handle(s, m.ChannelID)
 		return
 	}
@@ -37,7 +38,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 		regex := loadRegex(p.db, true)
 		for _, rxp := range regex {
 			if rxp.Compiled.MatchString(msg) {
-				rxp.handle(p.db, s, m.ChannelID, msg, m.Author.Mention())
+				rxp.handle(p, s, m.ChannelID, msg, m.Author.Mention())
 				return
 			}
 		}
@@ -46,7 +47,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 	regex := loadRegex(p.db, false)
 	for _, rxp := range regex {
 		if rxp.Compiled.MatchString(msg) {
-			rxp.handle(p.db, s, m.ChannelID, msg, m.Author.Mention())
+			rxp.handle(p, s, m.ChannelID, msg, m.Author.Mention())
 			return
 		}
 	}

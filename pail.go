@@ -6,8 +6,9 @@ import (
 )
 
 type Pail struct {
-	session *discordgo.Session
-	db      *sqlite.DB
+	session  *discordgo.Session
+	db       *sqlite.DB
+	lastFact *Fact
 }
 
 func NewPail(token, dbPath string) (*Pail, error) {

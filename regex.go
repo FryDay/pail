@@ -27,7 +27,7 @@ func loadRegex(db *sqlite.DB, mention bool) []*Regex {
 	return regex
 }
 
-func (r *Regex) handle(db *sqlite.DB, s *discordgo.Session, channelID, msg, author string) {
+func (r *Regex) handle(p *Pail, s *discordgo.Session, channelID, msg, author string) {
 	switch r.Action {
 	case "add":
 		parts := r.Compiled.FindStringSubmatch(msg)
@@ -35,9 +35,17 @@ func (r *Regex) handle(db *sqlite.DB, s *discordgo.Session, channelID, msg, auth
 			return
 		}
 		fact := NewFact(strings.TrimSpace(parts[1]), strings.TrimSpace(parts[3]), strings.TrimSpace(parts[2]))
-		if err := fact.insert(db); err == nil {
+		if err := fact.insert(p.db); err == nil {
 			s.ChannelMessageSend(channelID, fmt.Sprintf("Okay %s", author))
 		}
+	case "forget":
+		//
+	case "inquiry":
+		if p.lastFact != nil {
+			s.ChannelMessageSend(channelID, fmt.Sprintf("That was \"%s _%s_ %s\"", p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit))
+			return
+		}
+		s.ChannelMessageSend(channelID, "BZZZZZZZZZT!")
 	case "replace":
 		chance := rand.Intn(99) + 1
 		if chance <= 5 {

@@ -35,12 +35,12 @@ func main() {
 	}
 	dbPath := filepath.Join(confDir, "pail.db")
 
-	bot, err := pail.NewClient(conf.Token, dbPath)
+	pail, err := pail.NewPail(conf.Token, dbPath)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	err = bot.Open()
+	err = pail.Open()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -50,5 +50,5 @@ func main() {
 	signal.Notify(sc, os.Interrupt)
 	<-sc
 
-	bot.Close()
+	pail.Close()
 }

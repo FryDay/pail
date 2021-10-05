@@ -7,7 +7,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -24,7 +24,7 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 
-	fact, err := getFact(msg)
+	fact, err := getFact(p.db, msg)
 	if err != nil {
 		return
 	}
@@ -34,19 +34,19 @@ func messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if mentioned {
-		regex := loadRegex(true)
+		regex := loadRegex(p.db, true)
 		for _, rxp := range regex {
 			if rxp.Compiled.MatchString(msg) {
-				rxp.handle(s, m.ChannelID, msg, m.Author.Mention())
+				rxp.handle(p.db, s, m.ChannelID, msg, m.Author.Mention())
 				return
 			}
 		}
 	}
 
-	regex := loadRegex(false)
+	regex := loadRegex(p.db, false)
 	for _, rxp := range regex {
 		if rxp.Compiled.MatchString(msg) {
-			rxp.handle(s, m.ChannelID, msg, m.Author.Mention())
+			rxp.handle(p.db, s, m.ChannelID, msg, m.Author.Mention())
 			return
 		}
 	}

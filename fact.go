@@ -19,7 +19,7 @@ func NewFact(fact, tidbit, verb string) *Fact {
 	return &Fact{Fact: fact, Tidbit: tidbit, Verb: verb}
 }
 
-func getFact(msg string) (*Fact, error) {
+func getFact(db *sqlite.DB, msg string) (*Fact, error) {
 	msg = strings.ToLower(punctuationRegex.ReplaceAllString(msg, ""))
 	fact := &Fact{}
 	if err := db.Get(`select id, fact, tidbit, verb from fact where fact=:fact order by random() limit 1`, map[string]interface{}{"fact": msg}, fact); err != nil {
@@ -39,7 +39,7 @@ func getFact(msg string) (*Fact, error) {
 	return fact, nil
 }
 
-func (f *Fact) insert() error {
+func (f *Fact) insert(db *sqlite.DB) error {
 	return db.NamedExec(`insert into fact (fact, tidbit, verb) values (:fact, :tidbit, :verb)`, f)
 }
 

@@ -24,7 +24,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 		}
 	}
 
-	fact, err := getFact(p.db, msg)
+	fact, err := getFact(p.db, msg, m.Author.Mention())
 	if err != nil {
 		return
 	}

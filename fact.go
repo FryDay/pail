@@ -2,6 +2,7 @@ package pail
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/FryDay/pail/sqlite"
@@ -16,11 +17,16 @@ type Fact struct {
 	Verb           string `db:"verb"`
 }
 
+type Value struct {
+	Var   string `db:"var"`
+	Value string `db:"value"`
+}
+
 func NewFact(fact, tidbit, verb string) *Fact {
 	return &Fact{Fact: fact, Tidbit: tidbit, Verb: verb}
 }
 
-func getFact(db *sqlite.DB, msg string) (*Fact, error) {
+func getFact(db *sqlite.DB, msg, author string) (*Fact, error) {
 	msg = strings.ToLower(punctuationRegex.ReplaceAllString(msg, ""))
 	fact := &Fact{}
 	if err := db.Get(`select id, fact, tidbit, verb from fact where fact=:fact order by random() limit 1`, map[string]interface{}{"fact": msg}, fact); err != nil {
@@ -30,11 +36,30 @@ func getFact(db *sqlite.DB, msg string) (*Fact, error) {
 		return nil, err
 	}
 	if varRegex.MatchString(fact.Tidbit) {
+		fact.ReplacedTidbit = fact.Tidbit
 		vars := varRegex.FindAllString(fact.Tidbit, -1)
+		availVars := []string{}
+		db.Select(`select name from var`, nil, &availVars)
 		for _, origVar := range vars {
-			replaceVar := origVar[1:]
-			db.Get(`select val.value from value val join var v on v.id = val.var_id where v.name=:name order by random() limit 1`, map[string]interface{}{"name": replaceVar}, &replaceVar)
-			fact.ReplacedTidbit = strings.Replace(fact.Tidbit, origVar, replaceVar, 1)
+			val := &Value{}
+			if s := whoRegex.FindString(origVar); s != "" {
+				val.Var = s
+				val.Value = author
+			} else {
+				for _, v := range availVars {
+					r := regexp.MustCompile(fmt.Sprintf(`\$(%s)`, v))
+					if found := r.FindString(origVar); found > "" {
+						origVar = found
+						break
+					}
+				}
+				origVar = origVar[1:]
+				db.Get(`select v.name var, val.value from value val join var v on v.id = val.var_id where v.name=:name order by random() limit 1`, map[string]interface{}{"name": origVar}, val)
+				if val.Var > "" {
+					val.Var = fmt.Sprintf("$%s", val.Var)
+				}
+			}
+			fact.ReplacedTidbit = strings.Replace(fact.ReplacedTidbit, val.Var, val.Value, 1)
 		}
 	}
 	return fact, nil

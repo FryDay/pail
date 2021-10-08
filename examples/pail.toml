@@ -1,0 +1,4 @@
+Token = "bot_token_here"
+ReplaceChance = 5
+RandomInterval = 60
+RandomChannels = [123, 456, 789]

@@ -2,12 +2,12 @@ package pail
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"regexp"
 	"strings"
 
 	"github.com/FryDay/pail/sqlite"
-	"github.com/bwmarrin/discordgo"
 )
 
 type Regex struct {
@@ -27,41 +27,42 @@ func loadRegex(db *sqlite.DB, mention bool) []*Regex {
 	return regex
 }
 
-func (r *Regex) handle(p *Pail, s *discordgo.Session, channelID, msg, author string) {
+func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 	switch r.Action {
 	case "add":
 		parts := r.Compiled.FindStringSubmatch(msg)
 		if len(parts) != 4 {
-			return
+			return "", fmt.Errorf("Wrong syntax")
 		}
 		fact := NewFact(strings.TrimSpace(parts[1]), strings.TrimSpace(parts[3]), strings.TrimSpace(parts[2]))
 		if err := fact.insert(p.db); err == nil {
-			s.ChannelMessageSend(channelID, fmt.Sprintf("Okay %s", author))
+			return fmt.Sprintf("Okay %s", author), nil
 		}
 	case "forget":
 		if p.lastFact != nil {
 			err := p.lastFact.delete(p.db)
 			if err != nil {
-				s.ChannelMessageSend(channelID, "BZZZZZZZZZT!")
-				return
+				log.Println(err)
+				return "BZZZZZZZZZT!", nil
 			}
-			s.ChannelMessageSend(channelID, fmt.Sprintf("Okay %s, I forgot \"%s _%s_ %s\"", author, p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit))
 			p.lastFact = nil
-			return
+			return fmt.Sprintf("Okay %s, I forgot \"%s _%s_ %s\"", author, p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit), nil
 		}
-		s.ChannelMessageSend(channelID, fmt.Sprintf("I'm sorry %s, I can't let you do that...", author))
+		return fmt.Sprintf("I'm sorry %s, I can't let you do that...", author), nil
 	case "inquiry":
 		if p.lastFact != nil {
-			s.ChannelMessageSend(channelID, fmt.Sprintf("That was \"%s _%s_ %s\"", p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit))
-			return
+			return fmt.Sprintf("That was \"%s _%s_ %s\"", p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit), nil
 		}
-		s.ChannelMessageSend(channelID, "BZZZZZZZZZT!")
+		return "BZZZZZZZZZT!", nil
 	case "replace":
 		chance := rand.Intn(99) + 1
 		if chance <= p.config.ReplaceChance {
-			s.ChannelMessageSend(channelID, r.Compiled.ReplaceAllString(msg, r.Sub))
+			return r.Compiled.ReplaceAllString(msg, r.Sub), nil
 		}
+		return "", nil
 	case "reply":
-		s.ChannelMessageSend(channelID, r.Sub)
+		return r.Sub, nil
 	}
+
+	return "", fmt.Errorf("action %s not found", r.Action)
 }

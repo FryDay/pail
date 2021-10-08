@@ -1,6 +1,8 @@
 package pail
 
 type Config struct {
-	Token         string
-	ReplaceChance int
+	Token          string
+	ReplaceChance  int
+	RandomInterval int
+	RandomChannels []int
 }

@@ -2,6 +2,7 @@ package pail
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -30,7 +31,13 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 	}
 	if fact != nil {
 		p.lastFact = fact
-		fact.handle(s, m.ChannelID)
+		reply, err := fact.handle()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		s.ChannelMessageSend(m.ChannelID, reply)
+		p.randomReset <- true
 		return
 	}
 
@@ -38,7 +45,13 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 		regex := loadRegex(p.db, true)
 		for _, rxp := range regex {
 			if rxp.Compiled.MatchString(msg) {
-				rxp.handle(p, s, m.ChannelID, msg, m.Author.Mention())
+				reply, err := rxp.handle(p, msg, m.Author.Mention())
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				s.ChannelMessageSend(m.ChannelID, reply)
+				p.randomReset <- true
 				return
 			}
 		}
@@ -47,7 +60,13 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 	regex := loadRegex(p.db, false)
 	for _, rxp := range regex {
 		if rxp.Compiled.MatchString(msg) {
-			rxp.handle(p, s, m.ChannelID, msg, m.Author.Mention())
+			reply, err := rxp.handle(p, msg, m.Author.Mention())
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			s.ChannelMessageSend(m.ChannelID, reply)
+			p.randomReset <- true
 			return
 		}
 	}

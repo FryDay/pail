@@ -32,7 +32,7 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 	case "add":
 		parts := r.Compiled.FindStringSubmatch(msg)
 		if len(parts) != 4 {
-			return "", fmt.Errorf("Wrong syntax")
+			return "", fmt.Errorf("wrong syntax")
 		}
 		fact := NewFact(strings.TrimSpace(parts[1]), strings.TrimSpace(parts[3]), strings.TrimSpace(parts[2]))
 		if err := fact.insert(p.db); err == nil {

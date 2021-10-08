@@ -37,7 +37,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 			return
 		}
 		s.ChannelMessageSend(m.ChannelID, reply)
-		p.randomReset <- true
+		p.Reset()
 		return
 	}
 
@@ -51,7 +51,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 					return
 				}
 				s.ChannelMessageSend(m.ChannelID, reply)
-				p.randomReset <- true
+				p.Reset()
 				return
 			}
 		}
@@ -66,7 +66,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 				return
 			}
 			s.ChannelMessageSend(m.ChannelID, reply)
-			p.randomReset <- true
+			p.Reset()
 			return
 		}
 	}

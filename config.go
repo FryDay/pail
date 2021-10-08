@@ -1,5 +1,6 @@
 package pail
 
 type Config struct {
-	Token string
+	Token         string
+	ReplaceChance int
 }

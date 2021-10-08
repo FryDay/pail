@@ -35,7 +35,7 @@ func main() {
 	}
 	dbPath := filepath.Join(confDir, "pail.db")
 
-	pail, err := pail.NewPail(conf.Token, dbPath)
+	pail, err := pail.NewPail(&conf, dbPath)
 	if err != nil {
 		log.Fatalln(err)
 	}

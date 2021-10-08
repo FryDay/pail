@@ -58,7 +58,7 @@ func (r *Regex) handle(p *Pail, s *discordgo.Session, channelID, msg, author str
 		s.ChannelMessageSend(channelID, "BZZZZZZZZZT!")
 	case "replace":
 		chance := rand.Intn(99) + 1
-		if chance <= 5 {
+		if chance <= p.config.ReplaceChance {
 			s.ChannelMessageSend(channelID, r.Compiled.ReplaceAllString(msg, r.Sub))
 		}
 	case "reply":

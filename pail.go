@@ -6,13 +6,14 @@ import (
 )
 
 type Pail struct {
+	config   *Config
 	session  *discordgo.Session
 	db       *sqlite.DB
 	lastFact *Fact
 }
 
-func NewPail(token, dbPath string) (*Pail, error) {
-	session, err := discordgo.New("Bot " + token)
+func NewPail(config *Config, dbPath string) (*Pail, error) {
+	session, err := discordgo.New("Bot " + config.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -21,6 +22,7 @@ func NewPail(token, dbPath string) (*Pail, error) {
 		return nil, err
 	}
 	client := &Pail{
+		config:  config,
 		session: session,
 		db:      db,
 	}

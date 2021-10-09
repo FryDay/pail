@@ -25,7 +25,9 @@ insert into regex (expression, action, mention)
 values ('(.*?)(<reply>)(.*)', 'add', true),
     ('(.*?)(<action>)(.*)', 'add', true),
     ('^forget that$', 'forget', true),
-    ('^what was that\??$', 'inquiry', true);
+    ('^what was that\??$', 'inquiry', true),
+    ('^add \$(\w+) (\w+)', 'add_var', true),
+    ('^remove \$(\w+) (\w+)', 'remove_var', true);
 insert into var (name)
 values ('noun'),
     ('verb'),

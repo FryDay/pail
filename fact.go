@@ -9,26 +9,21 @@ import (
 )
 
 type Fact struct {
-	ID             int    `db:"id"`
+	ID             int64  `db:"id"`
 	Fact           string `db:"fact"`
 	Tidbit         string `db:"tidbit"`
 	ReplacedTidbit string `db:"-"`
 	Verb           string `db:"verb"`
 }
 
-type Value struct {
-	Var   string `db:"var"`
-	Value string `db:"value"`
-}
-
 func NewFact(fact, tidbit, verb string) *Fact {
 	return &Fact{Fact: fact, Tidbit: tidbit, Verb: verb}
 }
 
-func getFact(db *sqlite.DB, msg, author string) (*Fact, error) {
+func getFact(db *sqlite.DB, msg, author string) (fact *Fact, err error) {
+	fact = &Fact{}
 	msg = strings.ToLower(punctuationRegex.ReplaceAllString(msg, ""))
-	fact := &Fact{}
-	if err := db.Get(`select id, fact, tidbit, verb from fact where fact=:fact order by random() limit 1`, map[string]interface{}{"fact": msg}, fact); err != nil {
+	if err = db.Get(`select id, fact, tidbit, verb from fact where fact=:fact order by random() limit 1`, map[string]interface{}{"fact": msg}, fact); err != nil {
 		if err == sqlite.ErrNoRows {
 			return nil, nil
 		}
@@ -40,10 +35,10 @@ func getFact(db *sqlite.DB, msg, author string) (*Fact, error) {
 		availVars := []string{}
 		db.Select(`select name from var`, nil, &availVars)
 		for _, origVar := range vars {
-			val := &Value{}
+			varValue := &VarValue{Var: &Var{}, Value: &Value{}}
 			if s := whoRegex.FindString(origVar); s != "" {
-				val.Var = s
-				val.Value = author
+				varValue.Name = s
+				varValue.Value.Value = author
 			} else {
 				for _, v := range availVars {
 					r := regexp.MustCompile(fmt.Sprintf(`\$(%s)`, v))
@@ -53,20 +48,20 @@ func getFact(db *sqlite.DB, msg, author string) (*Fact, error) {
 					}
 				}
 				origVar = origVar[1:]
-				db.Get(`select v.name var, val.value from value val join var v on v.id = val.var_id where v.name=:name order by random() limit 1`, map[string]interface{}{"name": origVar}, val)
-				if val.Var > "" {
-					val.Var = fmt.Sprintf("$%s", val.Var)
+				varValue, err = getVarValue(db, origVar)
+				if err != nil {
+					return nil, err
 				}
 			}
-			fact.ReplacedTidbit = strings.Replace(fact.ReplacedTidbit, val.Var, val.Value, 1)
+			fact.ReplacedTidbit = strings.Replace(fact.ReplacedTidbit, varValue.Name, varValue.Value.Value, 1)
 		}
 	}
 	return fact, nil
 }
 
-func getRandomFact(db *sqlite.DB) (*Fact, error) {
-	fact := &Fact{}
-	if err := db.Get(`select id, fact, tidbit, verb from fact where tidbit not like '%$who%' order by random() limit 1`, nil, fact); err != nil {
+func getRandomFact(db *sqlite.DB) (fact *Fact, err error) {
+	fact = &Fact{}
+	if err = db.Get(`select id, fact, tidbit, verb from fact where tidbit not like '%$who%' order by random() limit 1`, nil, fact); err != nil {
 		if err == sqlite.ErrNoRows {
 			return nil, nil
 		}
@@ -78,7 +73,7 @@ func getRandomFact(db *sqlite.DB) (*Fact, error) {
 		availVars := []string{}
 		db.Select(`select name from var`, nil, &availVars)
 		for _, origVar := range vars {
-			val := &Value{}
+			varValue := &VarValue{Var: &Var{}, Value: &Value{}}
 			for _, v := range availVars {
 				r := regexp.MustCompile(fmt.Sprintf(`\$(%s)`, v))
 				if found := r.FindString(origVar); found > "" {
@@ -87,22 +82,23 @@ func getRandomFact(db *sqlite.DB) (*Fact, error) {
 				}
 			}
 			origVar = origVar[1:]
-			db.Get(`select v.name var, val.value from value val join var v on v.id = val.var_id where v.name=:name order by random() limit 1`, map[string]interface{}{"name": origVar}, val)
-			if val.Var > "" {
-				val.Var = fmt.Sprintf("$%s", val.Var)
+			varValue, err = getVarValue(db, origVar)
+			if err != nil {
+				return nil, err
 			}
-			fact.ReplacedTidbit = strings.Replace(fact.ReplacedTidbit, val.Var, val.Value, 1)
+			fact.ReplacedTidbit = strings.Replace(fact.ReplacedTidbit, varValue.Name, varValue.Value.Value, 1)
 		}
 	}
 	return fact, nil
 }
 
-func (f *Fact) insert(db *sqlite.DB) error {
-	return db.NamedExec(`insert into fact (fact, tidbit, verb) values (lower(:fact), :tidbit, :verb)`, f)
+func (f *Fact) insert(db *sqlite.DB) (err error) {
+	f.ID, err = db.NamedExec(`insert into fact (fact, tidbit, verb) values (lower(:fact), :tidbit, :verb)`, f)
+	return err
 }
 
 func (f *Fact) delete(db *sqlite.DB) error {
-	return db.NamedExec(`delete from fact where id=:id`, f)
+	return db.Delete(`delete from fact where id=:id`, f)
 }
 
 func (f *Fact) handle() (string, error) {

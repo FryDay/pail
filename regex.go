@@ -11,7 +11,7 @@ import (
 )
 
 type Regex struct {
-	ID         int            `db:"id"`
+	ID         int64          `db:"id"`
 	Expression string         `db:"expression"`
 	Action     string         `db:"action"`
 	Sub        string         `db:"sub"`
@@ -38,6 +38,38 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 		if err := fact.insert(p.db); err == nil {
 			return fmt.Sprintf("Okay %s", author), nil
 		}
+	case "add_var":
+		parts := r.Compiled.FindStringSubmatch(msg)
+		if len(parts) != 3 {
+			return "", fmt.Errorf("wrong syntax")
+		}
+
+		v, err := getVar(p.db, parts[1])
+		if err != nil {
+			log.Println(err)
+			return "BZZZZZZZZZT!", nil
+		}
+		if v == nil {
+			v = NewVar(parts[1])
+			v.insert(p.db)
+		}
+
+		value, err := getValue(p.db, v.ID, parts[2])
+		if err != nil {
+			log.Println(err)
+			return "BZZZZZZZZZT!", nil
+		}
+		if value == nil {
+			value = NewValue(v.ID, parts[2])
+			if err := value.insert(p.db); err == nil {
+				return fmt.Sprintf("Okay %s", author), nil
+			}
+		} else {
+			return fmt.Sprintf("I already know that one %s!", author), nil
+		}
+
+	case "remove_var":
+
 	case "forget":
 		if p.lastFact != nil {
 			err := p.lastFact.delete(p.db)

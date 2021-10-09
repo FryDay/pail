@@ -39,7 +39,11 @@ func (d *DB) Select(query string, in map[string]interface{}, out interface{}) er
 }
 
 // NamedExec executes a named exec on our transaction
-func (d *DB) NamedExec(command string, in interface{}) error {
-	_, err := d.db.NamedExec(command, in)
-	return err
+func (d *DB) NamedExec(command string, in interface{}) (int64, error) {
+	id := int64(0)
+	result, err := d.db.NamedExec(command, in)
+	if result != nil {
+		id, _ = result.LastInsertId()
+	}
+	return id, err
 }

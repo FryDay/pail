@@ -68,14 +68,17 @@ func (p *Pail) randomFact() {
 						p.randomReset <- true
 						continue
 					}
-					reply, err := fact.handle()
-					if err != nil {
-						log.Println(err)
-						p.randomReset <- true
-						continue
+					if fact != nil {
+						p.lastFact = fact
+						reply, err := fact.handle()
+						if err != nil {
+							log.Println(err)
+							p.randomReset <- true
+							continue
+						}
+						p.session.ChannelMessageSend(strconv.Itoa(chanID), reply)
+						saidRandomFact = true
 					}
-					p.session.ChannelMessageSend(strconv.Itoa(chanID), reply)
-					saidRandomFact = true
 				}
 			}
 		case <-p.randomReset:

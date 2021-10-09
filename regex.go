@@ -47,8 +47,7 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 
 		v, err := getVar(p.db, parts[1])
 		if err != nil {
-			log.Println(err)
-			return "BZZZZZZZZZT!", nil
+			return r.handleError(err), nil
 		}
 		if v == nil {
 			v = NewVar(parts[1])
@@ -57,8 +56,7 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 
 		value, err := getValue(p.db, v.ID, parts[2])
 		if err != nil {
-			log.Println(err)
-			return "BZZZZZZZZZT!", nil
+			return r.handleError(err), nil
 		}
 		if value != nil {
 			return fmt.Sprintf("I already know that one %s!", author), nil
@@ -66,8 +64,7 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 
 		value = NewValue(v.ID, parts[2])
 		if err := value.insert(p.db); err != nil {
-			log.Println(err)
-			return "BZZZZZZZZZT!", nil
+			return r.handleError(err), nil
 		}
 		return fmt.Sprintf("Okay %s", author), nil
 
@@ -79,8 +76,7 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 
 		v, err := getVar(p.db, parts[1])
 		if err != nil {
-			log.Println(err)
-			return "BZZZZZZZZZT!", nil
+			return r.handleError(err), nil
 		}
 		if v == nil {
 			return fmt.Sprintf("I don't know that one %s!", author), nil
@@ -88,16 +84,14 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 
 		value, err := getValue(p.db, v.ID, parts[2])
 		if err != nil {
-			log.Println(err)
-			return "BZZZZZZZZZT!", nil
+			return r.handleError(err), nil
 		}
 		if value == nil {
 			return fmt.Sprintf("I don't know that one %s!", author), nil
 		}
 
 		if err := value.delete(p.db); err != nil {
-			log.Println(err)
-			return "BZZZZZZZZZT!", nil
+			return r.handleError(err), nil
 		}
 		return fmt.Sprintf("Okay %s", author), nil
 
@@ -105,8 +99,7 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 		if p.lastFact != nil {
 			err := p.lastFact.delete(p.db)
 			if err != nil {
-				log.Println(err)
-				return "BZZZZZZZZZT!", nil
+				return r.handleError(err), nil
 			}
 			p.lastFact = nil
 			return fmt.Sprintf("Okay %s, I forgot \"%s _%s_ %s\"", author, p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit), nil
@@ -131,4 +124,9 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 	}
 
 	return "", fmt.Errorf("action %s not found", r.Action)
+}
+
+func (r *Regex) handleError(err error) string {
+	log.Println(err)
+	return "BZZZZZZZZZT!"
 }

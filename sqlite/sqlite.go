@@ -47,3 +47,9 @@ func (d *DB) NamedExec(command string, in interface{}) (int64, error) {
 	}
 	return id, err
 }
+
+// Delete should be used for deletes
+func (d *DB) Delete(command string, in interface{}) error {
+	_, err := d.db.NamedExec(command, in)
+	return err
+}

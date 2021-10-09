@@ -99,9 +99,8 @@ func (f *Fact) insert(db *sqlite.DB) (err error) {
 	return err
 }
 
-func (f *Fact) delete(db *sqlite.DB) (err error) {
-	f.ID, err = db.NamedExec(`delete from fact where id=:id`, f)
-	return err
+func (f *Fact) delete(db *sqlite.DB) error {
+	return db.Delete(`delete from fact where id=:id`, f)
 }
 
 func (f *Fact) handle() (string, error) {

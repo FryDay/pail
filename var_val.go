@@ -68,3 +68,7 @@ func (val *Value) insert(db *sqlite.DB) (err error) {
 	val.ID, err = db.NamedExec(`insert into value (var_id, value) values (:var_id, :value)`, val)
 	return err
 }
+
+func (val *Value) delete(db *sqlite.DB) error {
+	return db.Delete(`delete from value where id=:id`, val)
+}

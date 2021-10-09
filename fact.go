@@ -93,7 +93,7 @@ func getRandomFact(db *sqlite.DB) (fact *Fact, err error) {
 }
 
 func (f *Fact) insert(db *sqlite.DB) (err error) {
-	f.ID, err = db.NamedExec(`insert into fact (fact, tidbit, verb) values (lower(:fact), :tidbit, :verb)`, f)
+	f.ID, err = db.Insert(`insert into fact (fact, tidbit, verb) values (lower(:fact), :tidbit, :verb)`, f)
 	return err
 }
 

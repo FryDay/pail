@@ -38,8 +38,8 @@ func (d *DB) Select(query string, in map[string]interface{}, out interface{}) er
 	return d.db.Select(out, boundQuery, args...)
 }
 
-// NamedExec executes a named exec on our transaction
-func (d *DB) NamedExec(command string, in interface{}) (int64, error) {
+// Insert should be used for inserts
+func (d *DB) Insert(command string, in interface{}) (int64, error) {
 	id := int64(0)
 	result, err := d.db.NamedExec(command, in)
 	if result != nil {

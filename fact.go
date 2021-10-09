@@ -2,7 +2,6 @@ package pail
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -35,7 +34,6 @@ func getFact(db *sqlite.DB, msg, author string) (fact *Fact, err error) {
 		vars := varRegex.FindAllString(fact.Tidbit, -1)
 		availVars := []string{}
 		db.Select(`select name from var`, nil, &availVars)
-		log.Println(availVars)
 		for _, origVar := range vars {
 			varValue := &VarValue{Var: &Var{}, Value: &Value{}}
 			if s := whoRegex.FindString(origVar); s != "" {

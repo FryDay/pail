@@ -18,7 +18,7 @@ type Regex struct {
 	Compiled   *regexp.Regexp `db:"-"`
 }
 
-func loadRegex(db *sqlite.DB, mention bool) []*Regex {
+func getAllRegex(db *sqlite.DB, mention bool) []*Regex {
 	regex := []*Regex{}
 	db.Select(`select id, expression, action, sub from regex where mention=:mention`, map[string]interface{}{"mention": mention}, &regex)
 	for _, r := range regex {

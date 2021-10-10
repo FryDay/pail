@@ -48,7 +48,7 @@ func getValue(db *sqlite.DB, varID int64, value string) (*Value, error) {
 	return val, nil
 }
 
-func getVarValue(db *sqlite.DB, name string) (*VarValue, error) {
+func findVarValue(db *sqlite.DB, name string) (*VarValue, error) {
 	varValue := &VarValue{}
 	if err := db.Get(`select ('$' || v.name) name, val.value from value val join var v on v.id = val.var_id where v.name=:name order by random() limit 1`, map[string]interface{}{"name": name}, varValue); err != nil {
 		if err == sqlite.ErrNoRows {

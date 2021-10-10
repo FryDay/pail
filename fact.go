@@ -20,7 +20,7 @@ func NewFact(fact, tidbit, verb string) *Fact {
 	return &Fact{Fact: fact, Tidbit: tidbit, Verb: verb}
 }
 
-func getFact(db *sqlite.DB, msg, author string) (fact *Fact, err error) {
+func findFact(db *sqlite.DB, msg, author string) (fact *Fact, err error) {
 	fact = &Fact{}
 	msg = strings.ToLower(punctuationRegex.ReplaceAllString(msg, ""))
 	if err = db.Get(`select id, fact, tidbit, verb from fact where fact=:fact order by random() limit 1`, map[string]interface{}{"fact": msg}, fact); err != nil {
@@ -48,7 +48,7 @@ func getFact(db *sqlite.DB, msg, author string) (fact *Fact, err error) {
 					}
 				}
 				origVar = origVar[1:]
-				varValue, err = getVarValue(db, origVar)
+				varValue, err = findVarValue(db, origVar)
 				if err != nil {
 					return nil, err
 				}
@@ -82,7 +82,7 @@ func getRandomFact(db *sqlite.DB) (fact *Fact, err error) {
 				}
 			}
 			origVar = origVar[1:]
-			varValue, err = getVarValue(db, origVar)
+			varValue, err = findVarValue(db, origVar)
 			if err != nil {
 				return nil, err
 			}

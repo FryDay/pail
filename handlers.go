@@ -25,7 +25,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 		}
 	}
 
-	fact, err := getFact(p.db, msg, m.Author.Mention())
+	fact, err := findFact(p.db, msg, m.Author.Mention())
 	if err != nil {
 		return
 	}
@@ -36,13 +36,12 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 			log.Println(err)
 			return
 		}
-		s.ChannelMessageSend(m.ChannelID, reply)
-		p.Reset()
+		p.Say(m.ChannelID, reply)
 		return
 	}
 
 	if mentioned {
-		regex := loadRegex(p.db, true)
+		regex := getAllRegex(p.db, true)
 		for _, rxp := range regex {
 			if rxp.Compiled.MatchString(msg) {
 				reply, err := rxp.handle(p, msg, m.Author.Mention())
@@ -50,14 +49,13 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 					log.Println(err)
 					return
 				}
-				s.ChannelMessageSend(m.ChannelID, reply)
-				p.Reset()
+				p.Say(m.ChannelID, reply)
 				return
 			}
 		}
 	}
 
-	regex := loadRegex(p.db, false)
+	regex := getAllRegex(p.db, false)
 	for _, rxp := range regex {
 		if rxp.Compiled.MatchString(msg) {
 			reply, err := rxp.handle(p, msg, m.Author.Mention())
@@ -65,8 +63,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 				log.Println(err)
 				return
 			}
-			s.ChannelMessageSend(m.ChannelID, reply)
-			p.Reset()
+			p.Say(m.ChannelID, reply)
 			return
 		}
 	}

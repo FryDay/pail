@@ -48,7 +48,7 @@ func getValue(db *sqlite.DB, varID int64, value string) (*Value, error) {
 	return val, nil
 }
 
-func getVarValue(db *sqlite.DB, name string) (*VarValue, error) {
+func findVarValue(db *sqlite.DB, name string) (*VarValue, error) {
 	varValue := &VarValue{}
 	if err := db.Get(`select ('$' || v.name) name, val.value from value val join var v on v.id = val.var_id where v.name=:name order by random() limit 1`, map[string]interface{}{"name": name}, varValue); err != nil {
 		if err == sqlite.ErrNoRows {
@@ -60,12 +60,12 @@ func getVarValue(db *sqlite.DB, name string) (*VarValue, error) {
 }
 
 func (v *Var) insert(db *sqlite.DB) (err error) {
-	v.ID, err = db.NamedExec(`insert into var (name) values (:name)`, v)
+	v.ID, err = db.Insert(`insert into var (name) values (:name)`, v)
 	return err
 }
 
 func (val *Value) insert(db *sqlite.DB) (err error) {
-	val.ID, err = db.NamedExec(`insert into value (var_id, value) values (:var_id, :value)`, val)
+	val.ID, err = db.Insert(`insert into value (var_id, value) values (:var_id, :value)`, val)
 	return err
 }
 

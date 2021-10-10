@@ -55,6 +55,11 @@ func (p *Pail) Reset() {
 	p.randomReset <- true
 }
 
+func (p *Pail) Say(chanID, msg string) {
+	p.session.ChannelMessageSend(chanID, msg)
+	p.Reset()
+}
+
 func (p *Pail) randomFact() {
 	saidRandomFact := false
 	for {

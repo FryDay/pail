@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -45,7 +44,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	fmt.Println("Pail is now running.  Press CTRL-C to exit.")
+	log.Println("Pail is running...")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, os.Interrupt)
 	<-sc

@@ -61,7 +61,7 @@ func (p *Pail) Say(chanID, msg string) {
 }
 
 func (p *Pail) randomFact() {
-	saidRandomFact := false
+	saidRandomFact := true
 	for {
 		select {
 		case <-p.randomTicker.C:

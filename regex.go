@@ -101,8 +101,9 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 			if err != nil {
 				return r.handleError(err), nil
 			}
+			response := fmt.Sprintf("Okay %s, I forgot \"%s _%s_ %s\"", author, p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit)
 			p.lastFact = nil
-			return fmt.Sprintf("Okay %s, I forgot \"%s _%s_ %s\"", author, p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit), nil
+			return response, nil
 		}
 		return fmt.Sprintf("I'm sorry %s, I can't let you do that...", author), nil
 

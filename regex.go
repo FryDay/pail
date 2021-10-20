@@ -36,6 +36,7 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 		}
 		fact := NewFact(strings.TrimSpace(parts[1]), strings.TrimSpace(parts[3]), strings.TrimSpace(parts[2]))
 		if err := fact.insert(p.db); err == nil {
+			p.lastFact = fact
 			return fmt.Sprintf("Okay %s", author), nil
 		}
 

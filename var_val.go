@@ -3,14 +3,14 @@ package pail
 import "github.com/FryDay/pail/sqlite"
 
 type Var struct {
-	ID   int64  `db:"id"`
 	Name string `db:"name"`
+	ID   int64  `db:"id"`
 }
 
 type Value struct {
+	Value string `db:"value"`
 	ID    int64  `db:"id"`
 	VarID int64  `db:"var_id"`
-	Value string `db:"value"`
 }
 
 type VarValue struct {

@@ -11,11 +11,11 @@ import (
 )
 
 type Regex struct {
-	ID         int64          `db:"id"`
+	Compiled   *regexp.Regexp `db:"-"`
 	Expression string         `db:"expression"`
 	Action     string         `db:"action"`
 	Sub        string         `db:"sub"`
-	Compiled   *regexp.Regexp `db:"-"`
+	ID         int64          `db:"id"`
 }
 
 func getAllRegex(db *sqlite.DB, mention bool) []*Regex {

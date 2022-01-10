@@ -9,11 +9,11 @@ import (
 )
 
 type Fact struct {
-	ID             int64  `db:"id"`
 	Fact           string `db:"fact"`
 	Tidbit         string `db:"tidbit"`
 	ReplacedTidbit string `db:"-"`
 	Verb           string `db:"verb"`
+	ID             int64  `db:"id"`
 }
 
 func NewFact(fact, tidbit, verb string) *Fact {

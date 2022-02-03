@@ -89,6 +89,9 @@ func getRandomFact(db *sqlite.DB) (fact *Fact, err error) {
 			if err != nil {
 				return nil, err
 			}
+			if varValue == nil {
+				return nil, nil
+			}
 			fact.ReplacedTidbit = strings.Replace(fact.ReplacedTidbit, varValue.Name, varValue.Value.Value, 1)
 		}
 	}

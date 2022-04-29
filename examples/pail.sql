@@ -26,7 +26,7 @@ values ('(.*?)(<reply>)(.*)', 'add', true),
     ('(.*?)(<action>)(.*)', 'add', true),
     ('^forget that$', 'forget', true),
     ('^what was that\??$', 'inquiry', true),
-    ('^add \$(\w+) (\w+)', 'add_var', true),
+    ('^add \$(\w+) (\w+.*)', 'add_var', true),
     ('^remove \$(\w+) (\w+)', 'remove_var', true);
 insert into var (name)
 values ('noun'),

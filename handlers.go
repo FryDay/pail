@@ -18,7 +18,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 
 	mentioned := false
 	for _, mention := range m.Mentions {
-		if mention.ID == s.State.User.ID && fmt.Sprintf("<@!%s>", s.State.User.ID) == parts[0] {
+		if mention.ID == s.State.User.ID && fmt.Sprintf("<@%s>", s.State.User.ID) == parts[0] {
 			msg = strings.Join(parts[1:], " ")
 			mentioned = true
 			break

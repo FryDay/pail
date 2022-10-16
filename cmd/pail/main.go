@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -36,7 +35,7 @@ func main() {
 
 	var conf pail.Config
 	confPath := filepath.Join(confDir, "pail.toml")
-	confFile, err := ioutil.ReadFile(confPath)
+	confFile, err := os.ReadFile(confPath)
 	if err != nil {
 		log.Fatalln(err)
 	}

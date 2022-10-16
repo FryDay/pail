@@ -18,6 +18,17 @@ func init() {
 }
 
 func main() {
+	if _, err := os.Stat("logs"); os.IsNotExist(err) {
+		os.MkdirAll("logs", 0700)
+	}
+
+	logFile, err := os.OpenFile("logs/pail.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	defer logFile.Close()
+	log.SetOutput(logFile)
+
 	confDir := filepath.Join(os.Getenv("HOME"), ".config/pail")
 	if err := os.MkdirAll(confDir, os.ModePerm); err != nil {
 		log.Fatalln(err)

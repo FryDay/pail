@@ -2,10 +2,11 @@ package pail
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"regexp"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/FryDay/pail/sqlite"
 )
@@ -28,6 +29,7 @@ func getAllRegex(db *sqlite.DB, mention bool) []*Regex {
 }
 
 func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
+	log.Debug("Regex action: ", r.Action)
 	switch r.Action {
 	case "add":
 		parts := r.Compiled.FindStringSubmatch(msg)
@@ -106,16 +108,19 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 			p.lastFact = nil
 			return response, nil
 		}
+		log.Debug("Forget: Don't remember last fact.")
 		return fmt.Sprintf("I'm sorry %s, I can't let you do that...", author), nil
 
 	case "inquiry":
 		if p.lastFact != nil {
 			return fmt.Sprintf("That was \"%s _%s_ %s\"", p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit), nil
 		}
+		log.Debug("Inquiry: Don't remember last fact.")
 		return "BZZZZZZZZZT!", nil
 
 	case "replace":
 		chance := rand.Intn(99) + 1
+		log.Debug(fmt.Sprintf("Replace chance: %d, configured chance: %d", chance, p.config.ReplaceChance))
 		if chance <= p.config.ReplaceChance {
 			return r.Compiled.ReplaceAllString(msg, r.Sub), nil
 		}
@@ -129,6 +134,6 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 }
 
 func (r *Regex) handleError(err error) string {
-	log.Println(err)
+	log.Error(err)
 	return "BZZZZZZZZZT!"
 }

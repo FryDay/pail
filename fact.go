@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/FryDay/pail/sqlite"
+	log "github.com/sirupsen/logrus"
 )
 
 type Fact struct {
@@ -23,8 +24,10 @@ func NewFact(fact, tidbit, verb string) *Fact {
 func findFact(db *sqlite.DB, msg, author string) (fact *Fact, err error) {
 	fact = &Fact{}
 	msg = strings.ToLower(punctuationRegex.ReplaceAllString(msg, ""))
+	log.Debug("Fact lookup: ", msg)
 	if err = db.Get(`select id, fact, tidbit, verb from fact where fact=:fact order by random() limit 1`, map[string]interface{}{"fact": msg}, fact); err != nil {
 		if err == sqlite.ErrNoRows {
+			log.Debug("No fact found")
 			return nil, nil
 		}
 		return nil, err
@@ -32,6 +35,7 @@ func findFact(db *sqlite.DB, msg, author string) (fact *Fact, err error) {
 	if varRegex.MatchString(fact.Tidbit) {
 		fact.ReplacedTidbit = fact.Tidbit
 		vars := varRegex.FindAllString(fact.Tidbit, -1)
+		log.Debug(fmt.Sprintf("Fact var match: %v", vars))
 		availVars := []string{}
 		db.Select(`select name from var`, nil, &availVars)
 		for _, origVar := range vars {
@@ -99,6 +103,7 @@ func getRandomFact(db *sqlite.DB) (fact *Fact, err error) {
 }
 
 func (f *Fact) insert(db *sqlite.DB) (err error) {
+	log.Debug(fmt.Sprintf("New fact: '%s' '%s' '%s'", f.Fact, f.Tidbit, f.Verb))
 	f.ID, err = db.Insert(`insert into fact (fact, tidbit, verb) values (lower(:fact), :tidbit, :verb)`, f)
 	return err
 }

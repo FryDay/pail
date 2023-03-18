@@ -5,4 +5,5 @@ type Config struct {
 	RandomChannels []int
 	ReplaceChance  int
 	RandomInterval int
+	Debug          bool
 }

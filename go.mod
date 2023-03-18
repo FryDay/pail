@@ -7,6 +7,7 @@ require (
 	github.com/bwmarrin/discordgo v0.27.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/sirupsen/logrus v1.9.0
 )
 
 require (

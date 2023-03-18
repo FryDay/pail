@@ -1,9 +1,12 @@
 package pail
 
 import (
-	"log"
+	"fmt"
 	"strconv"
+	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/FryDay/pail/sqlite"
 	"github.com/bwmarrin/discordgo"
@@ -56,8 +59,11 @@ func (p *Pail) Reset() {
 }
 
 func (p *Pail) Say(chanID, msg string) {
-	p.session.ChannelMessageSend(chanID, msg)
-	p.Reset()
+	if strings.TrimSpace(msg) != "" {
+		log.Debug("Say: ", msg)
+		p.session.ChannelMessageSend(chanID, msg)
+		p.Reset()
+	}
 }
 
 func (p *Pail) randomFact() {
@@ -73,14 +79,16 @@ func (p *Pail) randomFact() {
 						p.randomReset <- true
 						continue
 					}
+					log.Debug(fmt.Sprintf("Random fact: %+v", fact))
 					if fact != nil {
 						p.lastFact = fact
 						reply, err := fact.handle()
 						if err != nil {
-							log.Println(err)
+							log.Error(err)
 							p.randomReset <- true
 							continue
 						}
+						log.Debug("Random fact reply: ", reply)
 						p.session.ChannelMessageSend(strconv.Itoa(chanID), reply)
 						saidRandomFact = true
 					}

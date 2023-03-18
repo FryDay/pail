@@ -1,12 +1,13 @@
 package main
 
 import (
-	"log"
 	"math/rand"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/BurntSushi/toml"
 	"github.com/FryDay/pail"
@@ -43,6 +44,10 @@ func main() {
 		log.Fatalln(err)
 	}
 	dbPath := filepath.Join(confDir, "pail.db")
+	log.SetLevel(log.InfoLevel)
+	if conf.Debug {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	pail, err := pail.NewPail(&conf, dbPath)
 	if err != nil {
@@ -54,7 +59,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	log.Println("Pail is running...")
+	log.Info("Pail is running...")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, os.Interrupt)
 	<-sc

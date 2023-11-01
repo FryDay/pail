@@ -40,6 +40,8 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 		if err := fact.insert(p.db); err == nil {
 			p.lastFact = fact
 			return fmt.Sprintf("Okay %s", author), nil
+		} else {
+			return fmt.Sprintf("I'm sorry %s, I can't let you do that...", author), nil
 		}
 
 	case "add_var":

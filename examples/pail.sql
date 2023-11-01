@@ -19,7 +19,8 @@ create table fact (
     id INTEGER not null primary key autoincrement,
     fact TEXT not null,
     tidbit TEXT not null,
-    verb TEXT not null
+    verb TEXT not null,
+    unique(fact, tidbit, verb)
 );
 insert into regex (expression, action, mention)
 values ('(.*?)(<reply>)(.*)', 'add', true),

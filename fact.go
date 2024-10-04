@@ -80,7 +80,7 @@ func getRandomFact(db *sqlite.DB) (fact *Fact, err error) {
 		availVars := []string{}
 		db.Select(`select name from var`, nil, &availVars)
 		for _, origVar := range vars {
-			varValue := &VarValue{Var: &Var{}, Value: &Value{}}
+			varValue := &VarValue{}
 			for _, v := range availVars {
 				r := regexp.MustCompile(fmt.Sprintf(`\$(%s)`, v))
 				if found := r.FindString(origVar); found > "" {

@@ -28,7 +28,7 @@ func getAllRegex(db *sqlite.DB, mention bool) []*Regex {
 	return regex
 }
 
-func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
+func (r *Regex) handle(p *Pail, msg, author, channelID, messageID string) (string, error) {
 	log.Debug("Regex action: ", r.Action)
 	switch r.Action {
 	case "add":
@@ -130,6 +130,9 @@ func (r *Regex) handle(p *Pail, msg, author string) (string, error) {
 
 	case "reply":
 		return r.Sub, nil
+
+	case "react":
+		return "", p.session.MessageReactionAdd(channelID, messageID, r.Sub)
 	}
 
 	return "", fmt.Errorf("action %s not found", r.Action)

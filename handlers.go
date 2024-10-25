@@ -48,7 +48,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 		for _, rxp := range regex {
 			if rxp.Compiled.MatchString(msg) {
 				log.Debug("Mention regex found: ", rxp.Expression)
-				reply, err := rxp.handle(p, msg, m.Author.Mention())
+				reply, err := rxp.handle(p, msg, m.Author.Mention(), m.ChannelID, m.ID)
 				if err != nil {
 					log.Error(err)
 					return
@@ -64,7 +64,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 	for _, rxp := range regex {
 		if rxp.Compiled.MatchString(msg) {
 			log.Debug("Regex found: ", rxp.Expression)
-			reply, err := rxp.handle(p, msg, m.Author.Mention())
+			reply, err := rxp.handle(p, msg, m.Author.Mention(), m.ChannelID, m.ID)
 			if err != nil {
 				log.Error(err)
 				return

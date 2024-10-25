@@ -132,8 +132,7 @@ func (r *Regex) handle(p *Pail, msg, author, channelID, messageID string) (strin
 		return r.Sub, nil
 
 	case "react":
-		p.session.MessageReactionAdd(channelID, messageID, r.Sub)
-		return "", nil
+		return "", p.session.MessageReactionAdd(channelID, messageID, r.Sub)
 	}
 
 	return "", fmt.Errorf("action %s not found", r.Action)

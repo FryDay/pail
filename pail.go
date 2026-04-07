@@ -2,8 +2,8 @@ package pail
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -17,8 +17,24 @@ type Pail struct {
 	session      *discordgo.Session
 	db           *sqlite.DB
 	lastFact     *Fact
+	lastFactMu   sync.Mutex
 	randomTicker *time.Ticker
 	randomReset  chan bool
+	done         chan struct{}
+	regexCache   map[bool][]*Regex
+	regexCacheMu sync.RWMutex
+}
+
+func (p *Pail) setLastFact(f *Fact) {
+	p.lastFactMu.Lock()
+	defer p.lastFactMu.Unlock()
+	p.lastFact = f
+}
+
+func (p *Pail) getLastFact() *Fact {
+	p.lastFactMu.Lock()
+	defer p.lastFactMu.Unlock()
+	return p.lastFact
 }
 
 func NewPail(config *Config, dbPath string) (*Pail, error) {
@@ -41,9 +57,37 @@ func NewPail(config *Config, dbPath string) (*Pail, error) {
 
 	client.randomTicker = time.NewTicker(time.Minute * time.Duration(config.RandomInterval))
 	client.randomReset = make(chan bool)
+	client.done = make(chan struct{})
+	if err := client.loadRegexCache(); err != nil {
+		return nil, err
+	}
 	go client.randomFact()
 
 	return client, nil
+}
+
+func (p *Pail) loadRegexCache() error {
+	p.regexCacheMu.Lock()
+	defer p.regexCacheMu.Unlock()
+	mentionRegex, err := loadAllRegex(p.db, true)
+	if err != nil {
+		return err
+	}
+	normalRegex, err := loadAllRegex(p.db, false)
+	if err != nil {
+		return err
+	}
+	p.regexCache = map[bool][]*Regex{
+		true:  mentionRegex,
+		false: normalRegex,
+	}
+	return nil
+}
+
+func (p *Pail) getRegex(mention bool) []*Regex {
+	p.regexCacheMu.RLock()
+	defer p.regexCacheMu.RUnlock()
+	return p.regexCache[mention]
 }
 
 func (p *Pail) Open() error {
@@ -51,6 +95,8 @@ func (p *Pail) Open() error {
 }
 
 func (p *Pail) Close() {
+	close(p.done)
+	p.randomTicker.Stop()
 	p.session.Close()
 }
 
@@ -61,7 +107,9 @@ func (p *Pail) Reset() {
 func (p *Pail) Say(chanID, msg string) {
 	if strings.TrimSpace(msg) != "" {
 		log.Debug("Say: ", msg)
-		p.session.ChannelMessageSend(chanID, msg)
+		if _, err := p.session.ChannelMessageSend(chanID, msg); err != nil {
+			log.Error("Failed to send message: ", err)
+		}
 		p.Reset()
 	}
 }
@@ -70,6 +118,8 @@ func (p *Pail) randomFact() {
 	saidRandomFact := true
 	for {
 		select {
+		case <-p.done:
+			return
 		case <-p.randomTicker.C:
 			// TODO: This could be smarter and keep track of a seperate ticker per channel
 			if !saidRandomFact {
@@ -81,7 +131,7 @@ func (p *Pail) randomFact() {
 					}
 					log.Debug(fmt.Sprintf("Random fact: %+v", fact))
 					if fact != nil {
-						p.lastFact = fact
+						p.setLastFact(fact)
 						reply, err := fact.handle()
 						if err != nil {
 							log.Error(err)
@@ -89,7 +139,9 @@ func (p *Pail) randomFact() {
 							continue
 						}
 						log.Debug("Random fact reply: ", reply)
-						p.session.ChannelMessageSend(strconv.Itoa(chanID), reply)
+						if _, err := p.session.ChannelMessageSend(chanID, reply); err != nil {
+							log.Error("Failed to send random fact: ", err)
+						}
 						saidRandomFact = true
 					}
 				}

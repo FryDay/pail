@@ -33,7 +33,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 		return
 	}
 	if fact != nil {
-		p.lastFact = fact
+		p.setLastFact(fact)
 		reply, err := fact.handle()
 		if err != nil {
 			log.Error(err)
@@ -44,7 +44,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 	}
 
 	if mentioned {
-		regex := getAllRegex(p.db, true)
+		regex := p.getRegex(true)
 		for _, rxp := range regex {
 			if rxp.Compiled.MatchString(msg) {
 				log.Debug("Mention regex found: ", rxp.Expression)
@@ -60,7 +60,7 @@ func (p *Pail) messageHandler(s *discordgo.Session, m *discordgo.MessageCreate) 
 		log.Debug("No mention regex found")
 	}
 
-	regex := getAllRegex(p.db, false)
+	regex := p.getRegex(false)
 	for _, rxp := range regex {
 		if rxp.Compiled.MatchString(msg) {
 			log.Debug("Regex found: ", rxp.Expression)

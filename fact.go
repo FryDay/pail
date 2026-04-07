@@ -21,83 +21,73 @@ func NewFact(fact, tidbit, verb string) *Fact {
 	return &Fact{Fact: fact, Tidbit: tidbit, Verb: verb}
 }
 
-func findFact(db *sqlite.DB, msg, author string) (fact *Fact, err error) {
-	fact = &Fact{}
+// resolveVars resolves variable placeholders in the fact's tidbit.
+// Returns false if a variable could not be resolved (caller should treat as no result).
+func (f *Fact) resolveVars(db *sqlite.DB, author string) (bool, error) {
+	if !varRegex.MatchString(f.Tidbit) {
+		return true, nil
+	}
+	f.ReplacedTidbit = f.Tidbit
+	vars := varRegex.FindAllString(f.Tidbit, -1)
+	log.Debug(fmt.Sprintf("Fact var match: %v", vars))
+	availVars := []string{}
+	if err := db.Select(`select name from var`, nil, &availVars); err != nil {
+		return false, err
+	}
+	for _, origVar := range vars {
+		if author != "" {
+			if s := whoRegex.FindString(origVar); s != "" {
+				f.ReplacedTidbit = strings.Replace(f.ReplacedTidbit, s, author, 1)
+				continue
+			}
+		}
+		for _, v := range availVars {
+			r := regexp.MustCompile(fmt.Sprintf(`\$(%s)`, regexp.QuoteMeta(v)))
+			if found := r.FindString(origVar); found > "" {
+				origVar = found
+				break
+			}
+		}
+		origVar = origVar[1:]
+		varValue, err := findVarValue(db, origVar)
+		if err != nil {
+			return false, err
+		}
+		if varValue == nil {
+			return false, nil
+		}
+		f.ReplacedTidbit = strings.Replace(f.ReplacedTidbit, varValue.Name, varValue.Value, 1)
+	}
+	return true, nil
+}
+
+func findFact(db *sqlite.DB, msg, author string) (*Fact, error) {
+	fact := &Fact{}
 	msg = strings.ToLower(punctuationRegex.ReplaceAllString(msg, ""))
 	log.Debug("Fact lookup: ", msg)
-	if err = db.Get(`select id, fact, tidbit, verb from fact where fact=:fact order by random() limit 1`, map[string]interface{}{"fact": msg}, fact); err != nil {
+	if err := db.Get(`select id, fact, tidbit, verb from fact where fact=:fact order by random() limit 1`, map[string]interface{}{"fact": msg}, fact); err != nil {
 		if err == sqlite.ErrNoRows {
 			log.Debug("No fact found")
 			return nil, nil
 		}
 		return nil, err
 	}
-	if varRegex.MatchString(fact.Tidbit) {
-		fact.ReplacedTidbit = fact.Tidbit
-		vars := varRegex.FindAllString(fact.Tidbit, -1)
-		log.Debug(fmt.Sprintf("Fact var match: %v", vars))
-		availVars := []string{}
-		db.Select(`select name from var`, nil, &availVars)
-		for _, origVar := range vars {
-			varValue := &VarValue{Var: &Var{}, Value: &Value{}}
-			if s := whoRegex.FindString(origVar); s != "" {
-				varValue.Name = s
-				varValue.Value.Value = author
-			} else {
-				for _, v := range availVars {
-					r := regexp.MustCompile(fmt.Sprintf(`\$(%s)`, v))
-					if found := r.FindString(origVar); found > "" {
-						origVar = found
-						break
-					}
-				}
-				origVar = origVar[1:]
-				varValue, err = findVarValue(db, origVar)
-				if err != nil {
-					return nil, err
-				}
-				if varValue == nil {
-					return nil, nil
-				}
-			}
-			fact.ReplacedTidbit = strings.Replace(fact.ReplacedTidbit, varValue.Name, varValue.Value.Value, 1)
-		}
+	if ok, err := fact.resolveVars(db, author); err != nil || !ok {
+		return nil, err
 	}
 	return fact, nil
 }
 
-func getRandomFact(db *sqlite.DB) (fact *Fact, err error) {
-	fact = &Fact{}
-	if err = db.Get(`select id, fact, tidbit, verb from fact where tidbit not like '%$who%' order by random() limit 1`, nil, fact); err != nil {
+func getRandomFact(db *sqlite.DB) (*Fact, error) {
+	fact := &Fact{}
+	if err := db.Get(`select id, fact, tidbit, verb from fact where tidbit not like '%$who%' order by random() limit 1`, nil, fact); err != nil {
 		if err == sqlite.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
 	}
-	if varRegex.MatchString(fact.Tidbit) {
-		fact.ReplacedTidbit = fact.Tidbit
-		vars := varRegex.FindAllString(fact.Tidbit, -1)
-		availVars := []string{}
-		db.Select(`select name from var`, nil, &availVars)
-		for _, origVar := range vars {
-			varValue := &VarValue{}
-			for _, v := range availVars {
-				r := regexp.MustCompile(fmt.Sprintf(`\$(%s)`, v))
-				if found := r.FindString(origVar); found > "" {
-					origVar = found
-					break
-				}
-			}
-			origVar = origVar[1:]
-			varValue, err = findVarValue(db, origVar)
-			if err != nil {
-				return nil, err
-			}
-			if varValue == nil {
-				return nil, nil
-			}
-			fact.ReplacedTidbit = strings.Replace(fact.ReplacedTidbit, varValue.Name, varValue.Value.Value, 1)
-		}
+	if ok, err := fact.resolveVars(db, ""); err != nil || !ok {
+		return nil, err
 	}
 	return fact, nil
 }

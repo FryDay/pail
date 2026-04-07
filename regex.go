@@ -19,13 +19,15 @@ type Regex struct {
 	Compiled   *regexp.Regexp `db:"-"`
 }
 
-func getAllRegex(db *sqlite.DB, mention bool) []*Regex {
+func loadAllRegex(db *sqlite.DB, mention bool) ([]*Regex, error) {
 	regex := []*Regex{}
-	db.Select(`select id, expression, action, sub from regex where mention=:mention`, map[string]interface{}{"mention": mention}, &regex)
+	if err := db.Select(`select id, expression, action, sub from regex where mention=:mention`, map[string]interface{}{"mention": mention}, &regex); err != nil {
+		return nil, err
+	}
 	for _, r := range regex {
 		r.Compiled = regexp.MustCompile(r.Expression)
 	}
-	return regex
+	return regex, nil
 }
 
 func (r *Regex) handle(p *Pail, msg, author, channelID, messageID string) (string, error) {
@@ -38,7 +40,7 @@ func (r *Regex) handle(p *Pail, msg, author, channelID, messageID string) (strin
 		}
 		fact := NewFact(strings.TrimSpace(parts[1]), strings.TrimSpace(parts[3]), strings.TrimSpace(parts[2]))
 		if err := fact.insert(p.db); err == nil {
-			p.lastFact = fact
+			p.setLastFact(fact)
 			return fmt.Sprintf("Okay %s", author), nil
 		} else {
 			return fmt.Sprintf("I'm sorry %s, I can't let you do that...", author), nil
@@ -56,7 +58,9 @@ func (r *Regex) handle(p *Pail, msg, author, channelID, messageID string) (strin
 		}
 		if v == nil {
 			v = NewVar(parts[1])
-			v.insert(p.db)
+			if err := v.insert(p.db); err != nil {
+				return r.handleError(err), nil
+			}
 		}
 
 		value, err := getValue(p.db, v.ID, parts[2])
@@ -101,21 +105,21 @@ func (r *Regex) handle(p *Pail, msg, author, channelID, messageID string) (strin
 		return fmt.Sprintf("Okay %s", author), nil
 
 	case "forget":
-		if p.lastFact != nil {
-			err := p.lastFact.delete(p.db)
+		if fact := p.getLastFact(); fact != nil {
+			err := fact.delete(p.db)
 			if err != nil {
 				return r.handleError(err), nil
 			}
-			response := fmt.Sprintf("Okay %s, I forgot \"%s _%s_ %s\"", author, p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit)
-			p.lastFact = nil
+			response := fmt.Sprintf("Okay %s, I forgot \"%s _%s_ %s\"", author, fact.Fact, fact.Verb, fact.Tidbit)
+			p.setLastFact(nil)
 			return response, nil
 		}
 		log.Debug("Forget: Don't remember last fact.")
 		return fmt.Sprintf("I'm sorry %s, I can't let you do that...", author), nil
 
 	case "inquiry":
-		if p.lastFact != nil {
-			return fmt.Sprintf("That was \"%s _%s_ %s\"", p.lastFact.Fact, p.lastFact.Verb, p.lastFact.Tidbit), nil
+		if fact := p.getLastFact(); fact != nil {
+			return fmt.Sprintf("That was \"%s _%s_ %s\"", fact.Fact, fact.Verb, fact.Tidbit), nil
 		}
 		log.Debug("Inquiry: Don't remember last fact.")
 		return "BZZZZZZZZZT!", nil

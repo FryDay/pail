@@ -14,8 +14,8 @@ type Value struct {
 }
 
 type VarValue struct {
-	*Var
-	*Value
+	Name  string `db:"name"`
+	Value string `db:"value"`
 }
 
 func NewVar(name string) *Var {

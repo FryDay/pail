@@ -21,7 +21,7 @@ func NewDB(path string) (*DB, error) {
 }
 
 // Get gets a single entry from the database in the format of out interface
-func (d *DB) Get(query string, in map[string]interface{}, out interface{}) error {
+func (d *DB) Get(query string, in map[string]any, out any) error {
 	boundQuery, args, err := d.db.BindNamed(query, in)
 	if err != nil {
 		return err
@@ -30,7 +30,7 @@ func (d *DB) Get(query string, in map[string]interface{}, out interface{}) error
 }
 
 // Select gets multiple entries from the database in the format of out interface (use a slice [])
-func (d *DB) Select(query string, in map[string]interface{}, out interface{}) error {
+func (d *DB) Select(query string, in map[string]any, out any) error {
 	boundQuery, args, err := d.db.BindNamed(query, in)
 	if err != nil {
 		return err
@@ -39,7 +39,7 @@ func (d *DB) Select(query string, in map[string]interface{}, out interface{}) er
 }
 
 // Insert should be used for inserts
-func (d *DB) Insert(command string, in interface{}) (int64, error) {
+func (d *DB) Insert(command string, in any) (int64, error) {
 	id := int64(0)
 	result, err := d.db.NamedExec(command, in)
 	if result != nil {
@@ -49,7 +49,7 @@ func (d *DB) Insert(command string, in interface{}) (int64, error) {
 }
 
 // Delete should be used for deletes
-func (d *DB) Delete(command string, in interface{}) error {
+func (d *DB) Delete(command string, in any) error {
 	_, err := d.db.NamedExec(command, in)
 	return err
 }

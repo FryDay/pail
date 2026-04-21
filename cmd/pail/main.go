@@ -1,21 +1,15 @@
 package main
 
 import (
-	"math/rand"
 	"os"
 	"os/signal"
 	"path/filepath"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/BurntSushi/toml"
 	"github.com/FryDay/pail"
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 func main() {
 	if _, err := os.Stat("logs"); os.IsNotExist(err) {

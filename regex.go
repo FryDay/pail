@@ -2,7 +2,7 @@ package pail
 
 import (
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"regexp"
 	"strings"
 
@@ -21,7 +21,7 @@ type Regex struct {
 
 func loadAllRegex(db *sqlite.DB, mention bool) ([]*Regex, error) {
 	regex := []*Regex{}
-	if err := db.Select(`select id, expression, action, sub from regex where mention=:mention`, map[string]interface{}{"mention": mention}, &regex); err != nil {
+	if err := db.Select(`select id, expression, action, sub from regex where mention=:mention`, map[string]any{"mention": mention}, &regex); err != nil {
 		return nil, err
 	}
 	for _, r := range regex {
@@ -125,7 +125,7 @@ func (r *Regex) handle(p *Pail, msg, author, channelID, messageID string) (strin
 		return "BZZZZZZZZZT!", nil
 
 	case "replace":
-		chance := rand.Intn(99) + 1
+		chance := rand.IntN(99) + 1
 		log.Debug(fmt.Sprintf("Replace chance: %d, configured chance: %d", chance, p.config.ReplaceChance))
 		if chance <= p.config.ReplaceChance {
 			return r.Compiled.ReplaceAllString(msg, r.Sub), nil

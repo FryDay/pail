@@ -1,6 +1,10 @@
 package pail
 
-import "github.com/FryDay/pail/sqlite"
+import (
+	"errors"
+
+	"github.com/FryDay/pail/sqlite"
+)
 
 type Var struct {
 	ID   int64  `db:"id"`
@@ -28,8 +32,8 @@ func NewValue(varID int64, value string) *Value {
 
 func getVar(db *sqlite.DB, name string) (*Var, error) {
 	v := &Var{}
-	if err := db.Get(`select id, name from var where name=:name`, map[string]interface{}{"name": name}, v); err != nil {
-		if err == sqlite.ErrNoRows {
+	if err := db.Get(`select id, name from var where name=:name`, map[string]any{"name": name}, v); err != nil {
+		if errors.Is(err, sqlite.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err
@@ -39,8 +43,8 @@ func getVar(db *sqlite.DB, name string) (*Var, error) {
 
 func getValue(db *sqlite.DB, varID int64, value string) (*Value, error) {
 	val := &Value{}
-	if err := db.Get(`select id, var_id, value from value where var_id=:var_id and value=:value`, map[string]interface{}{"var_id": varID, "value": value}, val); err != nil {
-		if err == sqlite.ErrNoRows {
+	if err := db.Get(`select id, var_id, value from value where var_id=:var_id and value=:value`, map[string]any{"var_id": varID, "value": value}, val); err != nil {
+		if errors.Is(err, sqlite.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err
@@ -50,8 +54,8 @@ func getValue(db *sqlite.DB, varID int64, value string) (*Value, error) {
 
 func findVarValue(db *sqlite.DB, name string) (*VarValue, error) {
 	varValue := &VarValue{}
-	if err := db.Get(`select ('$' || v.name) name, val.value from value val join var v on v.id = val.var_id where v.name=:name order by random() limit 1`, map[string]interface{}{"name": name}, varValue); err != nil {
-		if err == sqlite.ErrNoRows {
+	if err := db.Get(`select ('$' || v.name) name, val.value from value val join var v on v.id = val.var_id where v.name=:name order by random() limit 1`, map[string]any{"name": name}, varValue); err != nil {
+		if errors.Is(err, sqlite.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err

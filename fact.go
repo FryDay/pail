@@ -1,6 +1,7 @@
 package pail
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -65,8 +66,8 @@ func findFact(db *sqlite.DB, msg, author string) (*Fact, error) {
 	fact := &Fact{}
 	msg = strings.ToLower(punctuationRegex.ReplaceAllString(msg, ""))
 	log.Debug("Fact lookup: ", msg)
-	if err := db.Get(`select id, fact, tidbit, verb from fact where fact=:fact order by random() limit 1`, map[string]interface{}{"fact": msg}, fact); err != nil {
-		if err == sqlite.ErrNoRows {
+	if err := db.Get(`select id, fact, tidbit, verb from fact where fact=:fact order by random() limit 1`, map[string]any{"fact": msg}, fact); err != nil {
+		if errors.Is(err, sqlite.ErrNoRows) {
 			log.Debug("No fact found")
 			return nil, nil
 		}
@@ -81,7 +82,7 @@ func findFact(db *sqlite.DB, msg, author string) (*Fact, error) {
 func getRandomFact(db *sqlite.DB) (*Fact, error) {
 	fact := &Fact{}
 	if err := db.Get(`select id, fact, tidbit, verb from fact where tidbit not like '%$who%' order by random() limit 1`, nil, fact); err != nil {
-		if err == sqlite.ErrNoRows {
+		if errors.Is(err, sqlite.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err
